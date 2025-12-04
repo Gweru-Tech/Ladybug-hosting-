@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Ladybug Hosting</title>
+    <link rel="stylesheet" href="/css/style.css">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <header class="admin-header">
+        <div class="container">
+            <h1>🐞 Ladybug Hosting - Admin Panel</h1>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Admin Login -->
+        <div id="adminLoginSection" class="form-container">
+            <h2>Admin Login</h2>
+            <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+                <div class="form-group">
+                    <label for="adminUsername">Username</label>
+                    <input type="text" id="adminUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </form>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" style="display: none;">
+            <div class="admin-nav">
+                <button class="btn btn-primary" onclick="showDashboard()">Dashboard</button>
+                <button class="btn btn-secondary" onclick="showServers()">Servers</button>
+                <button class="btn btn-secondary" onclick="showUsers()">Users</button>
+                <button class="btn btn-secondary" onclick="showConnections()">Connections</button>
+                <button class="btn btn-danger" onclick="handleAdminLogout()">Logout</button>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboardView">
+                <h2>Dashboard Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">-</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalServers">-</div>
+                        <div class="stat-label">Total Servers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="activeConnections">-</div>
+                        <div class="stat-label">Active Connections</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="freeServers">-</div>
+                        <div class="stat-label">Free Servers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="paidServers">-</div>
+                        <div class="stat-label">Paid Servers</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="recent-section">
+                        <h3>Recent Servers</h3>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Owner</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentServers">
+                                <tr><td colspan="5">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="recent-section">
+                        <h3>Recent Users</h3>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Created</th>
+                                    <th>Last Login</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentUsers">
+                                <tr><td colspan="5">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Servers Management -->
+            <div id="serversView" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>Server Management</h2>
+                    <button class="btn btn-primary" onclick="showCreateServerModal()">Add New Server</button>
+                </div>
+
+                <div class="filter-controls" style="margin-bottom: 2rem;">
+                    <select id="serverTypeFilter" onchange="loadServers()">
+                        <option value="">All Types</option>
+                        <option value="free">Free</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                    <select id="serverStatusFilter" onchange="loadServers()">
+                        <option value="">All Status</option>
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                        <option value="maintenance">Maintenance</option>
+                    </select>
+                    <input type="text" placeholder="Search servers..." onkeyup="loadServers()">
+                </div>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Price</th>
+                            <th>Capacity</th>
+                            <th>Owner</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="serversTable">
+                        <tr><td colspan="8">Loading servers...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Users Management -->
+            <div id="usersView" style="display: none;">
+                <h2>User Management</h2>
+                
+                <div class="filter-controls" style="margin-bottom: 2rem;">
+                    <input type="text" placeholder="Search users..." onkeyup="loadUsers()">
+                </div>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                        <tr><td colspan="7">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Connections Management -->
+            <div id="connectionsView" style="display: none;">
+                <h2>Server Connections</h2>
+                
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Server</th>
+                            <th>Connected At</th>
+                            <th>Last Accessed</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="connectionsTable">
+                        <tr><td colspan="6">Loading connections...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Create Server Modal -->
+    <div id="createServerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Server</h2>
+                <button class="close-modal" onclick="closeModal('createServerModal')">&times;</button>
+            </div>
+            <form id="createServerForm" onsubmit="handleCreateServer(event)">
+                <div class="form-group">
+                    <label for="serverName">Server Name</label>
+                    <input type="text" id="serverName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverDescription">Description</label>
+                    <textarea id="serverDescription" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="serverType">Type</label>
+                    <select id="serverType" name="type" required>
+                        <option value="free">Free</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="serverCategory">Category</label>
+                    <select id="serverCategory" name="category" required>
+                        <option value="gaming">Gaming</option>
+                        <option value="web">Web Hosting</option>
+                        <option value="bot">Bot Hosting</option>
+                        <option value="database">Database</option>
+                        <option value="storage">Storage</option>
+                        <option value="compute">Compute</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="serverPrice">Price (USD)</label>
+                    <input type="number" id="serverPrice" name="price" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="serverLocation">Location</label>
+                    <input type="text" id="serverLocation" name="location" placeholder="e.g., US East" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverCapacity">Total Capacity</label>
+                    <input type="number" id="serverCapacity" name="capacity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverOwnerUsername">Owner Username</label>
+                    <input type="text" id="serverOwnerUsername" name="ownerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverHost">Connection Host</label>
+                    <input type="text" id="serverHost" name="host" placeholder="example.com or IP" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverPort">Port</label>
+                    <input type="number" id="serverPort" name="port" min="1" max="65535" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverConnUsername">Connection Username</label>
+                    <input type="text" id="serverConnUsername" name="connUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="serverConnPassword">Connection Password</label>
+                    <input type="password" id="serverConnPassword" name="connPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Server</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html>

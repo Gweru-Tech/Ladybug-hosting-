@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ladybug Hosting - Free & Paid Servers</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐞</text></svg>">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="/" class="logo">
+                <div class="ladybug-icon"></div>
+                Ladybug Hosting
+            </a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#servers">Servers</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <button class="btn btn-secondary" onclick="showLoginModal()">Login</button>
+                <button class="btn btn-primary" onclick="showRegisterModal()">Register</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/admin'">Admin</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section id="home" class="hero">
+            <h1>Welcome to Ladybug Hosting</h1>
+            <p>Access powerful free and paid servers with just one click. No complicated setup required!</p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary btn-lg" onclick="scrollToServers()">Browse Servers</button>
+                <button class="btn btn-secondary btn-lg" onclick="showRegisterModal()">Get Started</button>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>🚀 Instant Access</h3>
+                    <p>Connect to servers immediately without complex configurations</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🆓 Free Servers</h3>
+                    <p>Access powerful free servers for testing and development</p>
+                </div>
+                <div class="feature-card">
+                    <h3>💎 Premium Options</h3>
+                    <p>Upgrade to paid servers for enhanced performance and features</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🔒 Secure Connections</h3>
+                    <p>All connections are encrypted and secure with proper authentication</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="servers" class="servers-section">
+            <h2>Available Servers</h2>
+            
+            <div class="filter-controls">
+                <select id="typeFilter" onchange="filterServers()">
+                    <option value="">All Types</option>
+                    <option value="free">Free Servers</option>
+                    <option value="paid">Paid Servers</option>
+                </select>
+                <select id="categoryFilter" onchange="filterServers()">
+                    <option value="">All Categories</option>
+                    <option value="gaming">Gaming</option>
+                    <option value="web">Web Hosting</option>
+                    <option value="bot">Bot Hosting</option>
+                    <option value="database">Database</option>
+                    <option value="storage">Storage</option>
+                    <option value="compute">Compute</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="Search servers..." onkeyup="filterServers()">
+            </div>
+
+            <div id="serversList" class="server-grid">
+                <div class="spinner"></div>
+            </div>
+        </section>
+
+        <section id="about" class="about-section">
+            <div class="about-content">
+                <h2>About Ladybug Hosting</h2>
+                <p>Ladybug Hosting provides seamless access to both free and paid servers, making it easy for developers, gamers, and businesses to get the computing resources they need. Our platform eliminates the complexity of server management while providing robust security and performance.</p>
+                <div class="about-stats">
+                    <div class="stat-item">
+                        <h3>1000+</h3>
+                        <p>Active Servers</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>99.9%</h3>
+                        <p>Uptime</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>24/7</h3>
+                        <p>Support</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Ladybug Hosting. Powered by Bot-Hosting.net infrastructure.</p>
+            <p>
+                <a href="/admin" style="color: var(--ladybug-red);">Admin Panel</a> | 
+                <a href="#" style="color: var(--ladybug-red);">Privacy Policy</a> | 
+                <a href="#" style="color: var(--ladybug-red);">Terms of Service</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Login to Your Account</h2>
+                <button class="close-modal" onclick="closeModal('loginModal')">&times;</button>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">Username or Email</label>
+                    <input type="text" id="loginUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Don't have an account? <a href="#" onclick="switchToRegister()">Register here</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Your Account</h2>
+                <button class="close-modal" onclick="closeModal('registerModal')">&times;</button>
+            </div>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="registerUsername">Username</label>
+                    <input type="text" id="registerUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem;">
+                Already have an account? <a href="#" onclick="switchToLogin()">Login here</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

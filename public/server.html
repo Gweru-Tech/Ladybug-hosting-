@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Connection - Ladybug Hosting</title>
+    <link rel="stylesheet" href="/css/style.css">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="/" class="logo">
+                <div class="ladybug-icon"></div>
+                Ladybug Hosting
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/#servers">Servers</a></li>
+                <li><a href="/#about">About</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <button class="btn btn-secondary" onclick="window.location.href='/'">Back to Servers</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section id="serverConnection" class="server-connection-section">
+            <div id="serverDetails">
+                <div class="spinner"></div>
+            </div>
+        </section>
+
+        <section id="terminalSection" class="terminal-section" style="display: none;">
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <h3>Server Terminal</h3>
+                    <div class="terminal-controls">
+                        <button class="btn btn-secondary" onclick="clearTerminal()">Clear</button>
+                        <button class="btn btn-danger" onclick="closeTerminal()">Close</button>
+                    </div>
+                </div>
+                <div class="terminal" id="terminal">
+                    <div class="terminal-line">Welcome to Ladybug Hosting Terminal</div>
+                    <div class="terminal-line">Type 'help' for available commands</div>
+                    <div class="terminal-line"></div>
+                </div>
+                <div class="terminal-input-container">
+                    <span class="terminal-prompt">$</span>
+                    <input type="text" id="terminalInput" class="terminal-input" placeholder="Enter command..." onkeypress="handleTerminalInput(event)">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let currentServer = null;
+        let connectionDetails = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() => {
+            loadServerDetails();
+        });
+
+        // Load server details
+        async function loadServerDetails() {
+            const serverId = window.location.pathname.split('/').pop();
+            
+            try {
+                const response = await fetch(`/api/servers/${serverId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentServer = data.server;
+                    displayServerDetails(data.server);
+                } else {
+                    showError('Failed to load server details');
+                    setTimeout(() => window.location.href = '/', 2000);
+                }
+            } catch (error) {
+                console.error('Error loading server details:', error);
+                showError('Failed to load server details');
+                setTimeout(() => window.location.href = '/', 2000);
+            }
+        }
+
+        // Display server details
+        function displayServerDetails(server) {
+            const serverDetails = document.getElementById('serverDetails');
+            
+            let connectionSection = '';
+            if (server.isConnected && server.connectionDetails) {
+                connectionSection = `
+                    <div class="connection-info">
+                        <h3>Connection Information</h3>
+                        <div class="connection-details">
+                            <div class="detail-item">
+                                <label>Host:</label>
+                                <span><code>${server.connectionDetails.host}</code></span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Port:</label>
+                                <span><code>${server.connectionDetails.port}</code></span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Protocol:</label>
+                                <span>${server.connectionDetails.protocol.toUpperCase()}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Connected Since:</label>
+                                <span>${new Date(server.connectionDetails.connectedAt).toLocaleString()}</span>
+                            </div>
+                        </div>
+                        <div class="connection-actions">
+                            <button class="btn btn-primary" onclick="copyConnectionDetails()">Copy Connection Command</button>
+                            <button class="btn btn-success" onclick="openTerminal()">Open Terminal</button>
+                            <button class="btn btn-warning" onclick="testConnection()">Test Connection</button>
+                            <button class="btn btn-danger" onclick="disconnectServer()">Disconnect</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                connectionSection = `
+                    <div class="connection-prompt">
+                        <h3>Not Connected</h3>
+                        <p>You need to connect to this server to access its features.</p>
+                        <button class="btn btn-primary" onclick="connectToServer()">Connect Now</button>
+                    </div>
+                `;
+            }
+
+            serverDetails.innerHTML = `
+                <div class="server-header">
+                    <h1>${server.name}</h1>
+                    <span class="server-type type-${server.type}">${server.type.toUpperCase()}</span>
+                    <span class="server-status status-${server.status}"></span>
+                    ${server.status.charAt(0).toUpperCase() + server.status.slice(1)}
+                </div>
+                
+                <div class="server-description">
+                    <p>${server.description}</p>
+                </div>
+                
+                <div class="server-specs-grid">
+                    <div class="spec-card">
+                        <h3>Specifications</h3>
+                        ${server.specs.cpu ? `<div class="spec-item"><span>CPU:</span><span>${server.specs.cpu}</span></div>` : ''}
+                        ${server.specs.ram ? `<div class="spec-item"><span>RAM:</span><span>${server.specs.ram}</span></div>` : ''}
+                        ${server.specs.storage ? `<div class="spec-item"><span>Storage:</span><span>${server.specs.storage}</span></div>` : ''}
+                        ${server.specs.bandwidth ? `<div class="spec-item"><span>Bandwidth:</span><span>${server.specs.bandwidth}</span></div>` : ''}
+                        <div class="spec-item"><span>Location:</span><span>${server.location}</span></div>
+                        <div class="spec-item"><span>Availability:</span><span>${server.availability}%</span></div>
+                    </div>
+                    
+                    <div class="spec-card">
+                        <h3>Server Information</h3>
+                        <div class="spec-item"><span>Category:</span><span>${server.category}</span></div>
+                        <div class="spec-item"><span>Owner:</span><span>${server.owner}</span></div>
+                        <div class="spec-item"><span>Capacity:</span><span>${server.capacity.used}/${server.capacity.total}</span></div>
+                        ${server.price > 0 ? `<div class="spec-item"><span>Price:</span><span>$${server.price}/${server.currency}</span></div>` : ''}
+                        <div class="spec-item"><span>Created:</span><span>${new Date(server.createdAt).toLocaleDateString()}</span></div>
+                        <div class="spec-item"><span>Updated:</span><span>${new Date(server.lastUpdated).toLocaleDateString()}</span></div>
+                    </div>
+                </div>
+                
+                ${connectionSection}
+                
+                <div class="server-features">
+                    <h3>Features & Tags</h3>
+                    <div class="tags-container">
+                        ${server.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Connect to server
+        async function connectToServer() {
+            const serverId = currentServer.id;
+            
+            try {
+                const response = await fetch(`/api/servers/${serverId}/connect`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Connected to server successfully!');
+                    connectionDetails = data.connectionDetails;
+                    localStorage.setItem('currentConnection', JSON.stringify(connectionDetails));
+                    loadServerDetails(); // Refresh the page
+                } else {
+                    showError(data.error || 'Failed to connect to server');
+                }
+            } catch (error) {
+                console.error('Connection error:', error);
+                showError('Failed to connect to server');
+            }
+        }
+
+        // Disconnect from server
+        async function disconnectServer() {
+            if (!confirm('Are you sure you want to disconnect from this server?')) {
+                return;
+            }
+            
+            const serverId = currentServer.id;
+            
+            try {
+                const response = await fetch(`/api/servers/${serverId}/disconnect`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess(data.message);
+                    localStorage.removeItem('currentConnection');
+                    loadServerDetails(); // Refresh the page
+                } else {
+                    showError(data.error || 'Failed to disconnect');
+                }
+            } catch catch (error) {
+                console.error('Disconnect error:', error);
+                showError('Failed to disconnect from server');
+            }
+        }
+
+        // Copy connection details to clipboard
+        function copyConnectionDetails() => {
+            if (!connectionDetails) {
+                // Try to get from localStorage
+                const stored = localStorage.getItem('currentConnection');
+                if (stored) {
+                    connectionDetails = JSON.parse(stored);
+                }
+            }
+            
+            if (connectionDetails) {
+                const command = connectionDetails.protocol === 'ssh' 
+                    ? `ssh ${connectionDetails.username}@${connectionDetails.host} -p ${connectionDetails.port}`
+                    : `${connectionDetails.protocol}://${connectionDetails.host}:${connectionDetails.port}`;
+                
+                navigator.clipboard.writeText(command).then(() => {
+                    showSuccess('Connection command copied to clipboard!');
+                }).catch(() => {
+                    showError('Failed to copy to clipboard');
+                });
+            }
+        }
+
+        // Open terminal
+        function openTerminal() {
+            document.getElementById('terminalSection').style.display = 'block';
+            document.getElementById('terminalInput').focus();
+        }
+
+        // Close terminal
+        function closeTerminal() {
+            document.getElementById('terminalSection').style.display = 'none';
+        }
+
+        // Clear terminal
+        function clearTerminal() {
+            const terminal = document.getElementById('terminal');
+            terminal.innerHTML = `
+                <div class="terminal-line">Terminal cleared</div>
+                <div class="terminal-line">Type 'help' for available commands</div>
+                <div class="terminal-line"></div>
+            `;
+        }
+
+        // Handle terminal input
+        function handleTerminalInput(event) {
+            if (event.key === 'Enter') {
+                const input = event.target.value.trim();
+                if (input) {
+                    addTerminalLine(`$ ${input}`, 'input');
+                    processTerminalCommand(input);
+                    event.target.value = '';
+                }
+            }
+        }
+
+        // Add line to terminal
+        function addTerminalLine(text, type = 'output') {
+            const terminal = document.getElementById('terminal');
+            const line = document.createElement('div');
+            line.className = `terminal-line ${type}`;
+            line.textContent = text;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Process terminal command
+        function processTerminalCommand(command) {
+            const cmd = command.toLowerCase().split(' ')[0];
+            const args = command.toLowerCase().split(' ').slice(1);
+            
+            switch (cmd) {
+                case 'help':
+                    addTerminalLine('Available commands:');
+                    addTerminalLine('  help     - Show this help message');
+                    addTerminalLine('  status   - Show server status');
+                    addTerminalLine('  uptime   - Show server uptime');
+                    addTerminalLine('  users    - Show connected users');
+                    addTerminalLine('  clear    - Clear terminal');
+                    addTerminalLine('  exit     - Close terminal');
+                    addTerminalLine('  ls       - List directory (simulated)');
+                    addTerminalLine('  info     - Show server information');
+                    break;
+                    
+                case 'status':
+                    addTerminalLine(`Server Status: ${currentServer.status}`);
+                    addTerminalLine(`Availability: ${currentServer.availability}%`);
+                    addTerminalLine(`Capacity: ${currentServer.capacity.used}/${currentServer.capacity.total}`);
+                    break;
+                    
+                case 'uptime':
+                    const uptime = Math.floor(Math.random() * 30) + 1;
+                    addTerminalLine(`Server uptime: ${uptime} days, ${Math.floor(Math.random() * 24)} hours`);
+                    break;
+                    
+                case 'users':
+                    addTerminalLine('Connected users:');
+                    addTerminalLine('  user1   192.168.1.100');
+                    addTerminalLine('  user2   192.168.1.101');
+                    addTerminalLine(`  ${currentServer.owner} 192.168.1.102 (you)`);
+                    break;
+                    
+                case 'clear':
+                    clearTerminal();
+                    break;
+                    
+                case 'exit':
+                    closeTerminal();
+                    break;
+                    
+                case 'ls':
+                    addTerminalLine('Documents/  Downloads/  Pictures/  Music/');
+                    break;
+                    
+                case 'info':
+                    addTerminalLine(`Server: ${currentServer.name}`);
+                    addTerminalLine(`Type: ${currentServer.type}`);
+                    addTerminalLine(`Location: ${currentServer.location}`);
+                    addTerminalLine(`Created: ${new Date(currentServer.createdAt).toLocaleDateString()}`);
+                    break;
+                    
+                default:
+                    addTerminalLine(`Command not found: ${cmd}. Type 'help' for available commands.`);
+                    break;
+            }
+        }
+
+        // Test connection (simulated)
+        function testConnection() {
+            addTerminalLine('Testing connection...', 'input');
+            setTimeout(() => {
+                addTerminalLine('Connection successful!', 'success');
+            }, 1000);
+        }
+
+        // Utility functions
+        function showSuccess(message) {
+            showAlert(message, 'success');
+        }
+
+        function showError(message) {
+            showAlert(message, 'error');
+        }
+
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            document.body.appendChild(alert);
+            
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '3000';
+            alert.style.maxWidth = '400px';
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+
+    <style>
+        .server-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .server-description {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-light);
+        }
+
+        .server-specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .spec-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .spec-card h3 {
+            margin-bottom: 1rem;
+            color: var(--ladybug-red);
+        }
+
+        .connection-info {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-light);
+        }
+
+        .connection-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-item label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .detail-item code {
+            background: #f4f4f4;
+            padding: 0.2rem 0.5rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .connection-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .connection-prompt {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: var(--shadow-light);
+        }
+
+        .terminal-section {
+            margin-top: 2rem;
+        }
+
+        .terminal-container {
+            background: #1e1e1e;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: #333;
+            color: white;
+        }
+
+        .terminal {
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding: 2rem;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #00ff00;
+            background: #0a0a0a;
+        }
+
+        .terminal-line {
+            margin-bottom: 0.5rem;
+            word-wrap: break-word;
+        }
+
+        .terminal-line.input {
+            color: #fff;
+        }
+
+        .terminal-line.success {
+            color: #00ff00;
+        }
+
+        .terminal-line.error {
+            color: #ff4444;
+        }
+
+        .terminal-input-container {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+        }
+
+        .terminal-prompt {
+            color: #00ff00;
+            margin-right: 0.5rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            background: var(--light-color);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: var(--dark-color);
+        }
+    </style>
+</body>
+</html>
