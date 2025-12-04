@@ -1,0 +1,33 @@
+services:
+  # Web Service
+  - type: web
+    name: ladybug-hosting
+    env: node
+    plan: starter
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        value: ${MONGODB_URI}
+    healthCheckPath: /
+    
+  # MongoDB Service (if using Render's MongoDB)
+  - type: pserv
+    name: ladybug-mongodb
+    env: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile.mongodb
+    healthCheckPath: /
+    
+# Auto-Deploy configuration
+version: "1"
+build:
+  engine: "docker"
